@@ -1,0 +1,25 @@
+name:            cookie
+version:         0.0.0
+license:         BSD3
+license-file:    LICENSE
+author:          Michael Snoyman <michael@snoyman.com>
+maintainer:      Michael Snoyman <michael@snoyman.com>
+synopsis:        HTTP cookie parsing and rendering
+category:        Web, Yesod
+stability:       Stable
+cabal-version:   >= 1.6
+build-type:      Simple
+homepage:        http://github.com/snoyberg/cookie
+
+library
+    build-depends:   base                      >= 4        && < 5
+                   , bytestring                >= 0.9.1.4  && < 0.10
+                   , blaze-builder             >= 0.2.1    && < 0.3
+                   , old-locale                >= 1        && < 1.1
+                   , time                      >= 1.1.4    && < 1.3
+    exposed-modules: Web.Cookie
+    ghc-options:     -Wall
+
+source-repository head
+  type:     git
+  location: git://github.com/snoyberg/cookie.git

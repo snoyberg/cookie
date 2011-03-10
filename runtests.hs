@@ -15,6 +15,7 @@ main :: IO ()
 main = defaultMain
     [ testProperty "parse/render cookies" propParseRenderCookies
     , testProperty "parse/render SetCookie" propParseRenderSetCookie
+    , testCase "parseCookies" caseParseCookies
     ]
 
 propParseRenderCookies :: Cookies' -> Bool
@@ -47,3 +48,9 @@ instance Arbitrary SetCookie where
                           <*> (fmap (fmap fromUnChars) arbitrary)
                           <*> fmap (parseCookieExpires . formatCookieExpires) (UTCTime <$> fmap toEnum arbitrary <*> return 0)
                           <*> (fmap (fmap fromUnChars) arbitrary)
+
+caseParseCookies :: Assertion
+caseParseCookies = do
+    let input = S8.pack "a=a1;b=b2; c=c3"
+        expected = [("a", "a1"), ("b", "b2"), ("c", "c3")]
+    map (S8.pack *** S8.pack) expected @=? parseCookies input

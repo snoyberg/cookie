@@ -15,7 +15,6 @@ module Web.Cookie
     ) where
 
 import qualified Data.ByteString as S
-import Blaze.ByteString.Builder (Builder, fromByteString)
 import Blaze.ByteString.Builder.Char8 (fromChar)
 import Data.Monoid (mempty, mappend, mconcat)
 import Data.Word (Word8)
@@ -24,7 +23,7 @@ import System.Locale (defaultTimeLocale)
 import Control.Arrow (first)
 import qualified Data.Ascii as A
 
-type Cookies = [(S.ByteString, S.ByteString)]
+type Cookies = [(A.Ascii, A.Ascii)]
 
 -- | Decode the value of a \"Cookie\" request header into key/value pairs.
 parseCookies :: A.Ascii -> Cookies
@@ -37,11 +36,11 @@ parseCookiesBS s
     let (x, y) = breakDiscard 59 s -- semicolon
      in parseCookie x : parseCookiesBS y
 
-parseCookie :: S.ByteString -> (S.ByteString, S.ByteString)
+parseCookie :: S.ByteString -> (A.Ascii, A.Ascii)
 parseCookie s =
     let (key, value) = breakDiscard 61 s -- equals sign
         key' = S.dropWhile (== 32) key -- space
-     in (key', value)
+     in (A.unsafeFromByteString key', A.unsafeFromByteString value)
 
 breakDiscard :: Word8 -> S.ByteString -> (S.ByteString, S.ByteString)
 breakDiscard w s =
@@ -51,13 +50,15 @@ breakDiscard w s =
 renderCookies :: Cookies -> A.AsciiBuilder
 renderCookies [] = mempty
 renderCookies cs =
-    A.unsafeFromBuilder $ foldr1 go $ map renderCookie cs
+    foldr1 go $ map renderCookie cs
   where
-    go x y = x `mappend` fromChar ';' `mappend` y
+    go x y = x `mappend` A.unsafeFromBuilder (fromChar ';') `mappend` y
 
-renderCookie :: (S.ByteString, S.ByteString) -> Builder
+renderCookie :: (A.Ascii, A.Ascii) -> A.AsciiBuilder
 renderCookie (k, v) =
-    fromByteString k `mappend` fromChar '=' `mappend` fromByteString v
+    A.toAsciiBuilder k `mappend`
+    A.unsafeFromBuilder (fromChar '=') `mappend`
+    A.toAsciiBuilder v
 
 data SetCookie = SetCookie
     { setCookieName :: A.Ascii

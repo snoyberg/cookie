@@ -15,19 +15,21 @@ module Web.Cookie
     ) where
 
 import qualified Data.ByteString as S
+import qualified Data.ByteString.Char8 as S8
+import Data.Char (toLower)
+import Blaze.ByteString.Builder (Builder, fromByteString, copyByteString)
 import Blaze.ByteString.Builder.Char8 (fromChar)
 import Data.Monoid (mempty, mappend, mconcat)
 import Data.Word (Word8)
 import Data.Time (UTCTime, formatTime, parseTime)
 import System.Locale (defaultTimeLocale)
 import Control.Arrow (first)
-import qualified Data.Ascii as A
 
-type Cookies = [(A.Ascii, A.Ascii)]
+type Cookies = [(S.ByteString, S.ByteString)]
 
 -- | Decode the value of a \"Cookie\" request header into key/value pairs.
-parseCookies :: A.Ascii -> Cookies
-parseCookies = parseCookiesBS . A.toByteString
+parseCookies :: S.ByteString -> Cookies
+parseCookies = parseCookiesBS
 
 parseCookiesBS :: S.ByteString -> Cookies
 parseCookiesBS s
@@ -36,59 +38,57 @@ parseCookiesBS s
     let (x, y) = breakDiscard 59 s -- semicolon
      in parseCookie x : parseCookiesBS y
 
-parseCookie :: S.ByteString -> (A.Ascii, A.Ascii)
+parseCookie :: S.ByteString -> (S.ByteString, S.ByteString)
 parseCookie s =
     let (key, value) = breakDiscard 61 s -- equals sign
         key' = S.dropWhile (== 32) key -- space
-     in (A.unsafeFromByteString key', A.unsafeFromByteString value)
+     in (key', value)
 
 breakDiscard :: Word8 -> S.ByteString -> (S.ByteString, S.ByteString)
 breakDiscard w s =
     let (x, y) = S.breakByte w s
      in (x, S.drop 1 y)
 
-renderCookies :: Cookies -> A.AsciiBuilder
+renderCookies :: Cookies -> Builder
 renderCookies [] = mempty
 renderCookies cs =
     foldr1 go $ map renderCookie cs
   where
-    go x y = x `mappend` A.unsafeFromBuilder (fromChar ';') `mappend` y
+    go x y = x `mappend` fromChar ';' `mappend` y
 
-renderCookie :: (A.Ascii, A.Ascii) -> A.AsciiBuilder
-renderCookie (k, v) =
-    A.toAsciiBuilder k `mappend`
-    A.unsafeFromBuilder (fromChar '=') `mappend`
-    A.toAsciiBuilder v
+renderCookie :: (S.ByteString, S.ByteString) -> Builder
+renderCookie (k, v) = fromByteString k `mappend` fromChar '='
+                                       `mappend` fromByteString v
 
 data SetCookie = SetCookie
-    { setCookieName :: A.Ascii
-    , setCookieValue :: A.Ascii
-    , setCookiePath :: Maybe A.Ascii
+    { setCookieName :: S.ByteString
+    , setCookieValue :: S.ByteString
+    , setCookiePath :: Maybe S.ByteString
     , setCookieExpires :: Maybe UTCTime
-    , setCookieDomain :: Maybe A.Ascii
+    , setCookieDomain :: Maybe S.ByteString
     }
     deriving (Eq, Show, Read)
 
-renderSetCookie :: SetCookie -> A.AsciiBuilder
+renderSetCookie :: SetCookie -> Builder
 renderSetCookie sc = mconcat
-    [ A.toAsciiBuilder $ setCookieName sc
-    , A.unsafeFromBuilder $ fromChar '='
-    , A.toAsciiBuilder $ setCookieValue sc
+    [ fromByteString (setCookieName sc)
+    , fromChar '='
+    , fromByteString (setCookieValue sc)
     , case setCookiePath sc of
         Nothing -> mempty
-        Just path -> A.toAsciiBuilder "; path="
-                     `mappend` A.toAsciiBuilder path
+        Just path -> copyByteString "; path="
+                     `mappend` fromByteString path
     , case setCookieExpires sc of
         Nothing -> mempty
-        Just e -> A.toAsciiBuilder "; expires=" `mappend`
-                  A.toAsciiBuilder (formatCookieExpires e)
+        Just e -> copyByteString "; expires=" `mappend`
+                  fromByteString (formatCookieExpires e)
     , case setCookieDomain sc of
         Nothing -> mempty
-        Just d -> A.toAsciiBuilder "; domain=" `mappend`
-                  A.toAsciiBuilder d
+        Just d -> copyByteString "; domain=" `mappend`
+                  fromByteString d
     ]
 
-parseSetCookie :: A.Ascii -> SetCookie
+parseSetCookie :: S.ByteString -> SetCookie
 parseSetCookie a = SetCookie
     { setCookieName = key
     , setCookieValue = value
@@ -98,14 +98,12 @@ parseSetCookie a = SetCookie
     , setCookieDomain = lookup "domain" pairs
     }
   where
-    (key, value, b) = parsePair $ A.toByteString a
-    pairs = map (first $ A.toCIAscii) $ parsePairs b
+    (key, value, b) = parsePair a
+    pairs = map (first $ S8.map toLower) $ parsePairs b
     parsePair bs =
         let (k, bs') = breakDiscard 61 bs -- equals sign
             (v, bs'') = breakDiscard 59 bs' -- semicolon
-         in (A.unsafeFromByteString k,
-             A.unsafeFromByteString v,
-             S.dropWhile (== 32) bs'') -- space
+         in (k, v, S.dropWhile (== 32) bs'') -- space
     parsePairs bs =
         if S.null bs
             then []
@@ -116,9 +114,9 @@ expiresFormat :: String
 expiresFormat = "%a, %d-%b-%Y %X GMT"
 
 -- | Format a 'UTCTime' for a cookie.
-formatCookieExpires :: UTCTime -> A.Ascii
+formatCookieExpires :: UTCTime -> S.ByteString
 formatCookieExpires =
-    A.unsafeFromString . formatTime defaultTimeLocale expiresFormat
+    S8.pack . formatTime defaultTimeLocale expiresFormat
 
-parseCookieExpires :: A.Ascii -> Maybe UTCTime
-parseCookieExpires = parseTime defaultTimeLocale expiresFormat . A.toString
+parseCookieExpires :: S.ByteString -> Maybe UTCTime
+parseCookieExpires = parseTime defaultTimeLocale expiresFormat . S8.unpack

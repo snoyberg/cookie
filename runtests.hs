@@ -1,10 +1,13 @@
 import Test.Framework (defaultMain)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
+import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck
+import Test.HUnit ((@=?), Assertion)
 
 import Web.Cookie
 import Blaze.ByteString.Builder (Builder, toLazyByteString)
 import qualified Data.ByteString as S
+import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Lazy as L
 import Data.Word (Word8)
 import Control.Arrow ((***))

@@ -8,6 +8,10 @@ module Web.Cookie
     , Cookies
     , parseCookies
     , renderCookies
+      -- ** UTF8 Version
+    , CookiesText
+    , parseCookiesText
+    , renderCookiesText
       -- * Expires field
     , expiresFormat
     , formatCookieExpires
@@ -24,19 +28,33 @@ import Data.Word (Word8)
 import Data.Time (UTCTime, formatTime, parseTime)
 import System.Locale (defaultTimeLocale)
 import Control.Arrow (first)
+import Data.Text (Text)
+import Data.Text.Encoding (encodeUtf8, decodeUtf8With)
+import Data.Text.Encoding.Error (lenientDecode)
+import Control.Arrow ((***))
+
+-- | Textual cookies. Functions assume UTF8 encoding.
+type CookiesText = [(Text, Text)]
+
+parseCookiesText :: S.ByteString -> CookiesText
+parseCookiesText =
+    map (go *** go) . parseCookies
+  where
+    go = decodeUtf8With lenientDecode
+
+-- FIXME to speed things up, skip encodeUtf8 and use fromText instead
+renderCookiesText :: CookiesText -> Builder
+renderCookiesText = renderCookies . map (encodeUtf8 *** encodeUtf8)
 
 type Cookies = [(S.ByteString, S.ByteString)]
 
 -- | Decode the value of a \"Cookie\" request header into key/value pairs.
 parseCookies :: S.ByteString -> Cookies
-parseCookies = parseCookiesBS
-
-parseCookiesBS :: S.ByteString -> Cookies
-parseCookiesBS s
+parseCookies s
   | S.null s = []
   | otherwise =
     let (x, y) = breakDiscard 59 s -- semicolon
-     in parseCookie x : parseCookiesBS y
+     in parseCookie x : parseCookies y
 
 parseCookie :: S.ByteString -> (S.ByteString, S.ByteString)
 parseCookie s =

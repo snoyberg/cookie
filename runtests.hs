@@ -13,11 +13,13 @@ import Data.Word (Word8)
 import Control.Arrow ((***))
 import Control.Applicative ((<$>), (<*>))
 import Data.Time (UTCTime (UTCTime))
+import qualified Data.Text as T
 
 main :: IO ()
 main = defaultMain
     [ testProperty "parse/render cookies" propParseRenderCookies
     , testProperty "parse/render SetCookie" propParseRenderSetCookie
+    , testProperty "parse/render cookies text" propParseRenderCookiesText
     , testCase "parseCookies" caseParseCookies
     ]
 
@@ -26,6 +28,13 @@ propParseRenderCookies cs' =
     parseCookies (builderToBs $ renderCookies cs) == cs
   where
     cs = map (fromUnChars *** fromUnChars) cs'
+
+propParseRenderCookiesText :: Cookies' -> Bool
+propParseRenderCookiesText cs' =
+    parseCookiesText (builderToBs $ renderCookiesText cs) == cs
+  where
+    cs = map (T.pack . map unChar'' *** T.pack . map unChar'') cs'
+    unChar'' = toEnum . fromEnum . unChar'
 
 fromUnChars :: [Char'] -> S.ByteString
 fromUnChars = S.pack . map unChar'

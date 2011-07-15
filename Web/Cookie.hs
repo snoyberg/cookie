@@ -32,6 +32,7 @@ import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8, decodeUtf8With)
 import Data.Text.Encoding.Error (lenientDecode)
 import Control.Arrow ((***))
+import Data.Maybe (isJust)
 
 -- | Textual cookies. Functions assume UTF8 encoding.
 type CookiesText = [(Text, Text)]
@@ -84,6 +85,7 @@ data SetCookie = SetCookie
     , setCookiePath :: Maybe S.ByteString
     , setCookieExpires :: Maybe UTCTime
     , setCookieDomain :: Maybe S.ByteString
+    , setCookieHttpOnly :: Bool
     }
     deriving (Eq, Show, Read)
 
@@ -104,6 +106,9 @@ renderSetCookie sc = mconcat
         Nothing -> mempty
         Just d -> copyByteString "; domain=" `mappend`
                   fromByteString d
+    , if setCookieHttpOnly sc
+        then copyByteString "; HttpOnly"
+        else mempty
     ]
 
 parseSetCookie :: S.ByteString -> SetCookie
@@ -114,6 +119,7 @@ parseSetCookie a = SetCookie
     , setCookieExpires =
         lookup "expires" pairs >>= parseCookieExpires
     , setCookieDomain = lookup "domain" pairs
+    , setCookieHttpOnly = isJust $ lookup "HttpOnly" pairs
     }
   where
     (key, value, b) = parsePair a

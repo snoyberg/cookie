@@ -25,7 +25,9 @@ import Blaze.ByteString.Builder (Builder, fromByteString, copyByteString)
 import Blaze.ByteString.Builder.Char8 (fromChar)
 import Data.Monoid (mempty, mappend, mconcat)
 import Data.Word (Word8)
+import Data.Ratio (numerator, denominator)
 import Data.Time (UTCTime, formatTime, parseTime)
+import Data.Time.Clock (DiffTime, secondsToDiffTime)
 import System.Locale (defaultTimeLocale)
 import Control.Arrow (first)
 import Data.Text (Text)
@@ -84,10 +86,12 @@ data SetCookie = SetCookie
     , setCookieValue :: S.ByteString
     , setCookiePath :: Maybe S.ByteString
     , setCookieExpires :: Maybe UTCTime
+    , setCookieMaxAge :: Maybe DiffTime
     , setCookieDomain :: Maybe S.ByteString
     , setCookieHttpOnly :: Bool
+    , setCookieSecure :: Bool
     }
-    deriving (Eq, Show, Read)
+    deriving (Eq, Show)
 
 renderSetCookie :: SetCookie -> Builder
 renderSetCookie sc = mconcat
@@ -96,18 +100,25 @@ renderSetCookie sc = mconcat
     , fromByteString (setCookieValue sc)
     , case setCookiePath sc of
         Nothing -> mempty
-        Just path -> copyByteString "; path="
+        Just path -> copyByteString "; Path="
                      `mappend` fromByteString path
     , case setCookieExpires sc of
         Nothing -> mempty
-        Just e -> copyByteString "; expires=" `mappend`
+        Just e -> copyByteString "; Expires=" `mappend`
                   fromByteString (formatCookieExpires e)
+    , case setCookieMaxAge sc of
+        Nothing -> mempty
+        Just ma -> copyByteString"; Max-Age=" `mappend`
+                   fromByteString (formatCookieMaxAge ma)
     , case setCookieDomain sc of
         Nothing -> mempty
-        Just d -> copyByteString "; domain=" `mappend`
+        Just d -> copyByteString "; Domain=" `mappend`
                   fromByteString d
     , if setCookieHttpOnly sc
         then copyByteString "; HttpOnly"
+        else mempty
+    , if setCookieSecure sc
+        then copyByteString "; Secure"
         else mempty
     ]
 
@@ -118,8 +129,11 @@ parseSetCookie a = SetCookie
     , setCookiePath = lookup "path" pairs
     , setCookieExpires =
         lookup "expires" pairs >>= parseCookieExpires
+    , setCookieMaxAge =
+        lookup "max-age" pairs >>= parseCookieMaxAge
     , setCookieDomain = lookup "domain" pairs
-    , setCookieHttpOnly = isJust $ lookup "HttpOnly" pairs
+    , setCookieHttpOnly = isJust $ lookup "httponly" pairs
+    , setCookieSecure = isJust $ lookup "secure" pairs
     }
   where
     (key, value, b) = parsePair a
@@ -144,3 +158,16 @@ formatCookieExpires =
 
 parseCookieExpires :: S.ByteString -> Maybe UTCTime
 parseCookieExpires = parseTime defaultTimeLocale expiresFormat . S8.unpack
+
+-- | Format a 'DiffTime' for a cookie.
+formatCookieMaxAge :: DiffTime -> S.ByteString
+formatCookieMaxAge difftime = S8.pack $ show (num `div` denom)
+  where rational = toRational difftime
+        num = numerator rational
+        denom = denominator rational
+
+parseCookieMaxAge :: S.ByteString -> Maybe DiffTime
+parseCookieMaxAge bs
+  | all (\ c -> c >= '0' && c <= '9') $ unpacked = Just $ secondsToDiffTime $ read unpacked
+  | otherwise = Nothing
+  where unpacked = S8.unpack bs

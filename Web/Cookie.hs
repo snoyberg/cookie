@@ -25,6 +25,7 @@ import Blaze.ByteString.Builder (Builder, fromByteString, copyByteString)
 import Blaze.ByteString.Builder.Char8 (fromChar)
 import Data.Monoid (mempty, mappend, mconcat)
 import Data.Word (Word8)
+import Data.Ratio (numerator, denominator)
 import Data.Time (UTCTime, formatTime, parseTime)
 import Data.Time.Clock (DiffTime, secondsToDiffTime)
 import System.Locale (defaultTimeLocale)
@@ -160,7 +161,10 @@ parseCookieExpires = parseTime defaultTimeLocale expiresFormat . S8.unpack
 
 -- | Format a 'DiffTime' for a cookie.
 formatCookieMaxAge :: DiffTime -> S.ByteString
-formatCookieMaxAge difftime = S8.pack $ show (floor difftime :: Integer)
+formatCookieMaxAge difftime = S8.pack $ show (num `div` denom)
+  where rational = toRational difftime
+        num = numerator rational
+        denom = denominator rational
 
 parseCookieMaxAge :: S.ByteString -> Maybe DiffTime
 parseCookieMaxAge bs

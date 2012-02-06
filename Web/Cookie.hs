@@ -1,9 +1,20 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Web.Cookie
     ( -- * Server to client
-      SetCookie (..)
+      -- ** Data type
+      SetCookie
+    , setCookieName
+    , setCookieValue
+    , setCookiePath
+    , setCookieExpires
+    , setCookieMaxAge
+    , setCookieDomain
+    , setCookieHttpOnly
+    , setCookieSecure
+      -- ** Functions
     , parseSetCookie
     , renderSetCookie
+    , def
       -- * Client to server
     , Cookies
     , parseCookies
@@ -35,6 +46,7 @@ import Data.Text.Encoding (encodeUtf8, decodeUtf8With)
 import Data.Text.Encoding.Error (lenientDecode)
 import Control.Arrow ((***))
 import Data.Maybe (isJust)
+import Data.Default (Default (def))
 
 -- | Textual cookies. Functions assume UTF8 encoding.
 type CookiesText = [(Text, Text)]
@@ -92,6 +104,18 @@ data SetCookie = SetCookie
     , setCookieSecure :: Bool
     }
     deriving (Eq, Show)
+
+instance Default SetCookie where
+    def = SetCookie
+        { setCookieName     = "name"
+        , setCookieValue    = "value"
+        , setCookiePath     = Nothing
+        , setCookieExpires  = Nothing
+        , setCookieMaxAge   = Nothing
+        , setCookieDomain   = Nothing
+        , setCookieHttpOnly = False
+        , setCookieSecure   = False
+        }
 
 renderSetCookie :: SetCookie -> Builder
 renderSetCookie sc = mconcat

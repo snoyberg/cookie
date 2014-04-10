@@ -47,6 +47,7 @@ import Data.Text.Encoding.Error (lenientDecode)
 import Control.Arrow ((***))
 import Data.Maybe (isJust)
 import Data.Default (Default (def))
+import Control.DeepSeq (NFData (rnf))
 
 -- | Textual cookies. Functions assume UTF8 encoding.
 type CookiesText = [(Text, Text)]
@@ -104,6 +105,17 @@ data SetCookie = SetCookie
     , setCookieSecure :: Bool
     }
     deriving (Eq, Show)
+
+instance NFData SetCookie where
+    rnf (SetCookie a b c d e f g h) =
+        rnf a `seq`
+        rnf b `seq`
+        rnf c `seq`
+        rnf d `seq`
+        rnf e `seq`
+        rnf f `seq`
+        rnf g `seq`
+        rnf h
 
 instance Default SetCookie where
     def = SetCookie

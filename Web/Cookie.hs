@@ -108,14 +108,18 @@ data SetCookie = SetCookie
 
 instance NFData SetCookie where
     rnf (SetCookie a b c d e f g h) =
-        rnf a `seq`
-        rnf b `seq`
-        rnf c `seq`
+        a `seq`
+        b `seq`
+        rnfMBS c `seq`
         rnf d `seq`
         rnf e `seq`
-        rnf f `seq`
+        rnfMBS f `seq`
         rnf g `seq`
         rnf h
+      where
+        -- For backwards compatibility
+        rnfMBS Nothing = ()
+        rnfMBS (Just bs) = bs `seq` ()
 
 instance Default SetCookie where
     def = SetCookie

@@ -37,7 +37,7 @@ import Blaze.ByteString.Builder.Char8 (fromChar)
 import Data.Monoid (mempty, mappend, mconcat)
 import Data.Word (Word8)
 import Data.Ratio (numerator, denominator)
-import Data.Time (UTCTime, formatTime, parseTime)
+import Data.Time (UTCTime (UTCTime), toGregorian, fromGregorian, formatTime, parseTime)
 import Data.Time.Clock (DiffTime, secondsToDiffTime)
 import System.Locale (defaultTimeLocale)
 import Control.Arrow (first)
@@ -197,7 +197,17 @@ formatCookieExpires =
     S8.pack . formatTime defaultTimeLocale expiresFormat
 
 parseCookieExpires :: S.ByteString -> Maybe UTCTime
-parseCookieExpires = parseTime defaultTimeLocale expiresFormat . S8.unpack
+parseCookieExpires =
+    fmap fuzzYear . parseTime defaultTimeLocale expiresFormat . S8.unpack
+  where
+    -- See: https://github.com/snoyberg/cookie/issues/5
+    fuzzYear orig@(UTCTime day diff)
+        | x >= 70 && x <= 99 = addYear 1900
+        | x >= 0 && x <= 69 = addYear 2000
+        | otherwise = orig
+      where
+        (x, y, z) = toGregorian day
+        addYear x' = UTCTime (fromGregorian (x + x') y z) diff
 
 -- | Format a 'DiffTime' for a cookie.
 formatCookieMaxAge :: DiffTime -> S.ByteString

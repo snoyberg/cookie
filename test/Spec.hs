@@ -12,7 +12,7 @@ import qualified Data.ByteString.Lazy as L
 import Data.Word (Word8)
 import Control.Arrow ((***))
 import Control.Applicative ((<$>), (<*>))
-import Data.Time (UTCTime (UTCTime))
+import Data.Time (UTCTime (UTCTime), toGregorian)
 import qualified Data.Text as T
 
 main :: IO ()
@@ -21,6 +21,9 @@ main = defaultMain
     , testProperty "parse/render SetCookie" propParseRenderSetCookie
     , testProperty "parse/render cookies text" propParseRenderCookiesText
     , testCase "parseCookies" caseParseCookies
+    , twoDigit 24 2024
+    , twoDigit 69 2069
+    , twoDigit 70 1970
     ]
 
 propParseRenderCookies :: Cookies' -> Bool
@@ -75,3 +78,18 @@ caseParseCookies = do
     let input = S8.pack "a=a1;b=b2; c=c3"
         expected = [("a", "a1"), ("b", "b2"), ("c", "c3")]
     map (S8.pack *** S8.pack) expected @=? parseCookies input
+
+-- Tests for two digit years, see:
+--
+-- https://github.com/snoyberg/cookie/issues/5
+twoDigit x y =
+    testCase ("year " ++ show x) (y @=? year)
+  where
+    (year, _, _) = toGregorian day
+    Just (UTCTime day _) = setCookieExpires sc
+    sc = parseSetCookie str
+    str = S8.pack $ concat
+        [ "foo=bar; Expires=Mon, 29-Jul-"
+        , show x
+        , " 04:52:08 GMT"
+        ]

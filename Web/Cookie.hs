@@ -189,7 +189,7 @@ parseSetCookie a = SetCookie
                   in (k, v) : parsePairs bs'
 
 expiresFormat :: String
-expiresFormat = "%a, %d-%b-%Y %X GMT"
+expiresFormat = "%a, %d-%b-%y %X GMT"
 
 -- | Format a 'UTCTime' for a cookie.
 formatCookieExpires :: UTCTime -> S.ByteString

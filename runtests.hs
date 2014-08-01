@@ -55,11 +55,20 @@ propParseRenderSetCookie sc =
     parseSetCookie (builderToBs $ renderSetCookie sc) == sc
 
 instance Arbitrary SetCookie where
-    arbitrary = SetCookie <$> (fmap fromUnChars arbitrary)
-                          <*> (fmap fromUnChars arbitrary)
-                          <*> (fmap (fmap fromUnChars) arbitrary)
-                          <*> fmap (parseCookieExpires . formatCookieExpires) (UTCTime <$> fmap toEnum arbitrary <*> return 0)
-                          <*> (fmap (fmap fromUnChars) arbitrary)
+    arbitrary = do
+        name <- fmap fromUnChars arbitrary
+        value <- fmap fromUnChars arbitrary
+        path <- fmap (fmap fromUnChars) arbitrary
+        expires <- fmap (parseCookieExpires . formatCookieExpires)
+                    (UTCTime <$> fmap toEnum arbitrary <*> return 0)
+        domain <- fmap (fmap fromUnChars) arbitrary
+        return def
+            { setCookieName = name
+            , setCookieValue = value
+            , setCookiePath = path
+            , setCookieExpires = expires
+            , setCookieDomain = domain
+            }
 
 caseParseCookies :: Assertion
 caseParseCookies = do

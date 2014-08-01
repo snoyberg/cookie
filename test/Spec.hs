@@ -65,12 +65,16 @@ instance Arbitrary SetCookie where
         expires <- fmap (parseCookieExpires . formatCookieExpires)
                     (UTCTime <$> fmap toEnum arbitrary <*> return 0)
         domain <- fmap (fmap fromUnChars) arbitrary
+        httponly <- arbitrary
+        secure <- arbitrary
         return def
             { setCookieName = name
             , setCookieValue = value
             , setCookiePath = path
             , setCookieExpires = expires
             , setCookieDomain = domain
+            , setCookieHttpOnly = httponly
+            , setCookieSecure = secure
             }
 
 caseParseCookies :: Assertion

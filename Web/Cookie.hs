@@ -164,29 +164,23 @@ renderSetCookie sc = mconcat
 
 parseSetCookie :: S.ByteString -> SetCookie
 parseSetCookie a = SetCookie
-    { setCookieName = key
+    { setCookieName = name
     , setCookieValue = value
-    , setCookiePath = lookup "path" pairs
+    , setCookiePath = lookup "path" flags
     , setCookieExpires =
-        lookup "expires" pairs >>= parseCookieExpires
+        lookup "expires" flags >>= parseCookieExpires
     , setCookieMaxAge =
-        lookup "max-age" pairs >>= parseCookieMaxAge
-    , setCookieDomain = lookup "domain" pairs
-    , setCookieHttpOnly = isJust $ lookup "httponly" pairs
-    , setCookieSecure = isJust $ lookup "secure" pairs
+        lookup "max-age" flags >>= parseCookieMaxAge
+    , setCookieDomain = lookup "domain" flags
+    , setCookieHttpOnly = isJust $ lookup "httponly" flags
+    , setCookieSecure = isJust $ lookup "secure" flags
     }
   where
-    (key, value, b) = parsePair a
-    pairs = map (first $ S8.map toLower) $ parsePairs b
-    parsePair bs =
-        let (k, bs') = breakDiscard 61 bs -- equals sign
-            (v, bs'') = breakDiscard 59 bs' -- semicolon
-         in (k, v, S.dropWhile (== 32) bs'') -- space
-    parsePairs bs =
-        if S.null bs
-            then []
-            else let (k, v, bs') = parsePair bs
-                  in (k, v) : parsePairs bs'
+    pairs = map (parsePair . dropSpace) $ S.split 59 a ++ [S8.empty] -- 59 = semicolon
+    (name, value) = head pairs
+    flags = map (first (S8.map toLower)) $ tail pairs
+    parsePair = breakDiscard 61 -- equals sign
+    dropSpace = S.dropWhile (== 32) -- space
 
 expiresFormat :: String
 expiresFormat = "%a, %d-%b-%Y %X GMT"

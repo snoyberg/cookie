@@ -90,7 +90,10 @@ twoDigit x y =
     testCase ("year " ++ show x) (y @=? year)
   where
     (year, _, _) = toGregorian day
-    Just (UTCTime day _) = setCookieExpires sc
+    day =
+        case setCookieExpires sc of
+            Just (UTCTime day _) -> day
+            Nothing -> error $ "setCookieExpires == Nothing for: " ++ show str
     sc = parseSetCookie str
     str = S8.pack $ concat
         [ "foo=bar; Expires=Mon, 29-Jul-"

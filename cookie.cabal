@@ -1,5 +1,5 @@
 name:            cookie
-version:         0.4.1.2
+version:         0.4.1.3
 license:         BSD3
 license-file:    LICENSE
 author:          Michael Snoyman <michael@snoyman.com>
@@ -37,7 +37,9 @@ test-suite test
                  , test-framework-hunit
                  , test-framework-quickcheck2
                  , text
-                 , time
+                 -- Bug in time 1.4.0, see:
+                 -- https://github.com/snoyberg/cookie/issues/9
+                 , time >= 1.4.0.2
 
 source-repository head
   type:     git

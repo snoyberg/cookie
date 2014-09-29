@@ -1,6 +1,6 @@
-import Test.Framework (defaultMain)
-import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.Framework.Providers.HUnit (testCase)
+import Test.Tasty (defaultMain, testGroup)
+import Test.Tasty.QuickCheck (testProperty)
+import Test.Tasty.HUnit (testCase)
 import Test.QuickCheck
 import Test.HUnit ((@=?), Assertion)
 
@@ -16,7 +16,7 @@ import Data.Time (UTCTime (UTCTime), toGregorian)
 import qualified Data.Text as T
 
 main :: IO ()
-main = defaultMain
+main = defaultMain $ testGroup "cookie"
     [ testProperty "parse/render cookies" propParseRenderCookies
     , testProperty "parse/render SetCookie" propParseRenderSetCookie
     , testProperty "parse/render cookies text" propParseRenderCookiesText

@@ -33,9 +33,9 @@ test-suite test
                  , blaze-builder
                  , bytestring
                  , cookie
-                 , test-framework
-                 , test-framework-hunit
-                 , test-framework-quickcheck2
+                 , tasty
+                 , tasty-hunit
+                 , tasty-quickcheck
                  , text
                  -- Bug in time 1.4.0, see:
                  -- https://github.com/snoyberg/cookie/issues/9

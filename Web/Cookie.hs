@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Web.Cookie
     ( -- * Server to client
@@ -39,7 +40,11 @@ import Data.Word (Word8)
 import Data.Ratio (numerator, denominator)
 import Data.Time (UTCTime (UTCTime), toGregorian, fromGregorian, formatTime, parseTime)
 import Data.Time.Clock (DiffTime, secondsToDiffTime)
+#if MIN_VERSION_time(1, 5, 0)
+import Data.Time (defaultTimeLocale)
+#else
 import System.Locale (defaultTimeLocale)
+#endif
 import Control.Arrow (first)
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8, decodeUtf8With)

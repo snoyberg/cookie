@@ -51,7 +51,7 @@ import Data.Text.Encoding (encodeUtf8, decodeUtf8With)
 import Data.Text.Encoding.Error (lenientDecode)
 import Control.Arrow ((***))
 import Data.Maybe (isJust)
-import Data.Default (Default (def))
+import Data.Default.Class (Default (def))
 import Control.DeepSeq (NFData (rnf))
 
 -- | Textual cookies. Functions assume UTF8 encoding.

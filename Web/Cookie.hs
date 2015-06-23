@@ -98,16 +98,30 @@ renderCookies cs =
 renderCookie :: (S.ByteString, S.ByteString) -> Builder
 renderCookie (k, v) = fromByteString k `mappend` fromChar '='
                                        `mappend` fromByteString v
-
+-- | Data type representing the key-value pair to use for a cookie, as well as configuration options for it.
+--
+-- ==== Creating a SetCookie 
+--
+-- 'SetCookie' does not export a constructor; instead, use the 'Default' instance to create one and override values (see <http://www.yesodweb.com/book/settings-types> for details):
+--
+-- @
+-- import Web.Cookie
+-- :set -XOverloadedStrings
+-- let cookie = 'def' { 'setCookieName' = "cookieName", 'setCookieValue' = "cookieValue" }
+-- @
+--
+-- ==== Cookie Configuration
+--
+-- Cookies have several configuration options; a brief summary of each option is given below. For more information, see <http://tools.ietf.org/html/rfc6265#section-4.1.2 RFC 6265> or <https://en.wikipedia.org/wiki/HTTP_cookie#Cookie_attributes Wikipedia>.
 data SetCookie = SetCookie
-    { setCookieName :: S.ByteString
-    , setCookieValue :: S.ByteString
-    , setCookiePath :: Maybe S.ByteString
-    , setCookieExpires :: Maybe UTCTime
-    , setCookieMaxAge :: Maybe DiffTime
-    , setCookieDomain :: Maybe S.ByteString
-    , setCookieHttpOnly :: Bool
-    , setCookieSecure :: Bool
+    { setCookieName :: S.ByteString -- ^ The name of the cookie. Default value: @"name"@
+    , setCookieValue :: S.ByteString -- ^ The value of the cookie. Default value: @"value"@
+    , setCookiePath :: Maybe S.ByteString -- ^ The URL path for which the cookie should be sent. Default value: @Nothing@ (The browser defaults to the path of the request that sets the cookie).
+    , setCookieExpires :: Maybe UTCTime -- ^ The time at which to expire the cookie. Default value: @Nothing@ (The browser will default to expiring a cookie when the browser is closed).
+    , setCookieMaxAge :: Maybe DiffTime -- ^ The maximum time to keep the cookie, in seconds. Default value: @Nothing@ (The browser defaults to expiring a cookie when the browser is closed).
+    , setCookieDomain :: Maybe S.ByteString -- ^ The domain for which the cookie should be sent. Default value: @Nothing@ (The browser defaults to the current domain).
+    , setCookieHttpOnly :: Bool -- ^ Marks the cookie as "HTTP only", i.e. not accessible from Javascript. Default value: @False@
+    , setCookieSecure :: Bool -- ^ Instructs the browser to only send the cookie over HTTPS. Default value: @False@
     }
     deriving (Eq, Show)
 

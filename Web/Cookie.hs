@@ -199,9 +199,9 @@ renderSetCookie sc = mconcat
         then copyByteString "; Secure"
         else mempty
     , case setCookieSameSite sc of
-      Nothing -> mempty
-      Just Lax -> copyByteString "; SameSite=Lax"
-      Just Strict -> copyByteString "; SameSite=Strict"
+        Nothing -> mempty
+        Just Lax -> copyByteString "; SameSite=Lax"
+        Just Strict -> copyByteString "; SameSite=Strict"
     ]
 
 parseSetCookie :: S.ByteString -> SetCookie
@@ -217,9 +217,9 @@ parseSetCookie a = SetCookie
     , setCookieHttpOnly = isJust $ lookup "httponly" flags
     , setCookieSecure = isJust $ lookup "secure" flags
     , setCookieSameSite = case lookup "samesite" flags of
-      Just "Lax" -> Just Lax
-      Just "Strict" -> Just Strict
-      _ -> Nothing
+        Just "Lax" -> Just Lax
+        Just "Strict" -> Just Strict
+        _ -> Nothing
     }
   where
     pairs = map (parsePair . dropSpace) $ S.split 59 a ++ [S8.empty] -- 59 = semicolon

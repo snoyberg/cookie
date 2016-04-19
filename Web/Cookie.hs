@@ -131,6 +131,9 @@ data SetCookie = SetCookie
 -- | Data type representing the options for a SameSite cookie
 data SameSiteOption = Lax | Strict deriving (Show, Eq)
 
+instance NFData SameSiteOption where
+  rnf _ = ()
+
 instance NFData SetCookie where
     rnf (SetCookie a b c d e f g h i) =
         a `seq`
@@ -141,7 +144,7 @@ instance NFData SetCookie where
         rnfMBS f `seq`
         rnf g `seq`
         rnf h `seq`
-        rnfMBS i
+        rnf i
       where
         -- For backwards compatibility
         rnfMBS Nothing = ()

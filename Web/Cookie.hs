@@ -13,7 +13,9 @@ module Web.Cookie
     , setCookieHttpOnly
     , setCookieSecure
     , setCookieSameSite
-    , SameSiteOption(..)
+    , SameSiteOption
+    , sameSiteLax
+    , sameSiteStrict
       -- ** Functions
     , parseSetCookie
     , renderSetCookie
@@ -133,6 +135,12 @@ data SameSiteOption = Lax | Strict deriving (Show, Eq)
 
 instance NFData SameSiteOption where
   rnf _ = ()
+
+sameSiteLax :: SameSiteOption
+sameSiteLax = Lax
+
+sameSiteStrict :: SameSiteOption
+sameSiteStrict = Strict
 
 instance NFData SetCookie where
     rnf (SetCookie a b c d e f g h i) =

@@ -54,7 +54,7 @@ instance Arbitrary Char' where
     arbitrary = fmap (Char' . toEnum) $ choose (62, 125)
 newtype SameSiteOption' = SameSiteOption' { unSameSiteOption' :: SameSiteOption }
 instance Arbitrary SameSiteOption' where
-  arbitrary = fmap SameSiteOption' (elements [Lax, Strict])
+  arbitrary = fmap SameSiteOption' (elements [sameSiteLax, sameSiteStrict])
 
 propParseRenderSetCookie :: SetCookie -> Bool
 propParseRenderSetCookie sc =

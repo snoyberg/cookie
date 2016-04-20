@@ -5,6 +5,7 @@ license-file:    LICENSE
 author:          Michael Snoyman <michael@snoyman.com>
 maintainer:      Michael Snoyman <michael@snoyman.com>
 synopsis:        HTTP cookie parsing and rendering
+description:     Hackage documentation generation is not reliable. For up to date documentation, please see: <https://www.stackage.org/package/cookie>.
 category:        Web, Yesod
 stability:       Stable
 cabal-version:   >= 1.8

@@ -52,6 +52,9 @@ instance Show Char' where
     showList = (++) . show . concatMap show
 instance Arbitrary Char' where
     arbitrary = fmap (Char' . toEnum) $ choose (62, 125)
+newtype SameSiteOption' = SameSiteOption' { unSameSiteOption' :: SameSiteOption }
+instance Arbitrary SameSiteOption' where
+  arbitrary = fmap SameSiteOption' (elements [sameSiteLax, sameSiteStrict])
 
 propParseRenderSetCookie :: SetCookie -> Bool
 propParseRenderSetCookie sc =
@@ -67,6 +70,7 @@ instance Arbitrary SetCookie where
         domain <- fmap (fmap fromUnChars) arbitrary
         httponly <- arbitrary
         secure <- arbitrary
+        sameSite <- fmap (fmap unSameSiteOption') arbitrary
         return def
             { setCookieName = name
             , setCookieValue = value
@@ -75,6 +79,7 @@ instance Arbitrary SetCookie where
             , setCookieDomain = domain
             , setCookieHttpOnly = httponly
             , setCookieSecure = secure
+            , setCookieSameSite = sameSite
             }
 
 caseParseCookies :: Assertion

@@ -12,6 +12,10 @@ module Web.Cookie
     , setCookieDomain
     , setCookieHttpOnly
     , setCookieSecure
+    , setCookieSameSite
+    , SameSiteOption
+    , sameSiteLax
+    , sameSiteStrict
       -- ** Functions
     , parseSetCookie
     , renderSetCookie
@@ -100,7 +104,7 @@ renderCookie (k, v) = fromByteString k `mappend` fromChar '='
                                        `mappend` fromByteString v
 -- | Data type representing the key-value pair to use for a cookie, as well as configuration options for it.
 --
--- ==== Creating a SetCookie 
+-- ==== Creating a SetCookie
 --
 -- 'SetCookie' does not export a constructor; instead, use the 'Default' instance to create one and override values (see <http://www.yesodweb.com/book/settings-types> for details):
 --
@@ -122,11 +126,24 @@ data SetCookie = SetCookie
     , setCookieDomain :: Maybe S.ByteString -- ^ The domain for which the cookie should be sent. Default value: @Nothing@ (The browser defaults to the current domain).
     , setCookieHttpOnly :: Bool -- ^ Marks the cookie as "HTTP only", i.e. not accessible from Javascript. Default value: @False@
     , setCookieSecure :: Bool -- ^ Instructs the browser to only send the cookie over HTTPS. Default value: @False@
+    , setCookieSameSite :: Maybe SameSiteOption -- ^ Marks the cookie as "same site", i.e. should not be sent with cross-site requests. Default value: @Nothing@
     }
     deriving (Eq, Show)
 
+-- | Data type representing the options for a SameSite cookie
+data SameSiteOption = Lax | Strict deriving (Show, Eq)
+
+instance NFData SameSiteOption where
+  rnf _ = ()
+
+sameSiteLax :: SameSiteOption
+sameSiteLax = Lax
+
+sameSiteStrict :: SameSiteOption
+sameSiteStrict = Strict
+
 instance NFData SetCookie where
-    rnf (SetCookie a b c d e f g h) =
+    rnf (SetCookie a b c d e f g h i) =
         a `seq`
         b `seq`
         rnfMBS c `seq`
@@ -134,7 +151,8 @@ instance NFData SetCookie where
         rnf e `seq`
         rnfMBS f `seq`
         rnf g `seq`
-        rnf h
+        rnf h `seq`
+        rnf i
       where
         -- For backwards compatibility
         rnfMBS Nothing = ()
@@ -150,6 +168,7 @@ instance Default SetCookie where
         , setCookieDomain   = Nothing
         , setCookieHttpOnly = False
         , setCookieSecure   = False
+        , setCookieSameSite = Nothing
         }
 
 renderSetCookie :: SetCookie -> Builder
@@ -179,6 +198,10 @@ renderSetCookie sc = mconcat
     , if setCookieSecure sc
         then copyByteString "; Secure"
         else mempty
+    , case setCookieSameSite sc of
+        Nothing -> mempty
+        Just Lax -> copyByteString "; SameSite=Lax"
+        Just Strict -> copyByteString "; SameSite=Strict"
     ]
 
 parseSetCookie :: S.ByteString -> SetCookie
@@ -193,6 +216,10 @@ parseSetCookie a = SetCookie
     , setCookieDomain = lookup "domain" flags
     , setCookieHttpOnly = isJust $ lookup "httponly" flags
     , setCookieSecure = isJust $ lookup "secure" flags
+    , setCookieSameSite = case lookup "samesite" flags of
+        Just "Lax" -> Just Lax
+        Just "Strict" -> Just Strict
+        _ -> Nothing
     }
   where
     pairs = map (parsePair . dropSpace) $ S.split 59 a ++ [S8.empty] -- 59 = semicolon

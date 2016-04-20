@@ -134,7 +134,7 @@ data SetCookie = SetCookie
 data SameSiteOption = Lax | Strict deriving (Show, Eq)
 
 instance NFData SameSiteOption where
-  rnf _ = ()
+  rnf x = x `seq` ()
 
 sameSiteLax :: SameSiteOption
 sameSiteLax = Lax

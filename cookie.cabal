@@ -1,6 +1,6 @@
 name:            cookie
-version:         0.4.2
-license:         BSD3
+version:         0.4.2.1
+license:         MIT
 license-file:    LICENSE
 author:          Michael Snoyman <michael@snoyman.com>
 maintainer:      Michael Snoyman <michael@snoyman.com>

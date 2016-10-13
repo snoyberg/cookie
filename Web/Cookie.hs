@@ -37,7 +37,7 @@ module Web.Cookie
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
 import Data.Char (toLower)
-import Blaze.ByteString.Builder (Builder, fromByteString, copyByteString)
+import Blaze.ByteString.Builder (Builder, fromByteString, copyByteString, toByteString)
 import Blaze.ByteString.Builder.Char8 (fromChar)
 import Data.Monoid (mempty, mappend, mconcat)
 import Data.Word (Word8)
@@ -57,6 +57,7 @@ import Control.Arrow ((***))
 import Data.Maybe (isJust)
 import Data.Default.Class (Default (def))
 import Control.DeepSeq (NFData (rnf))
+import Web.HttpApiData (FromHttpApiData(parseUrlPiece, parseHeader), ToHttpApiData(toUrlPiece, toHeader))
 
 -- | Textual cookies. Functions assume UTF8 encoding.
 type CookiesText = [(Text, Text)]
@@ -170,6 +171,14 @@ instance Default SetCookie where
         , setCookieSecure   = False
         , setCookieSameSite = Nothing
         }
+
+instance ToHttpApiData SetCookie where
+    toUrlPiece = decodeUtf8With lenientDecode . toHeader
+    toHeader = toByteString . renderSetCookie
+
+instance FromHttpApiData SetCookie where
+    parseUrlPiece = parseHeader . encodeUtf8
+    parseHeader = Right . parseSetCookie
 
 renderSetCookie :: SetCookie -> Builder
 renderSetCookie sc = mconcat

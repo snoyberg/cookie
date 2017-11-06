@@ -19,6 +19,7 @@ module Web.Cookie
       -- ** Functions
     , parseSetCookie
     , renderSetCookie
+    , defaultSetCookie
     , def
       -- * Client to server
     , Cookies
@@ -106,12 +107,12 @@ renderCookie (k, v) = fromByteString k `mappend` fromChar '='
 --
 -- ==== Creating a SetCookie
 --
--- 'SetCookie' does not export a constructor; instead, use the 'Default' instance to create one and override values (see <http://www.yesodweb.com/book/settings-types> for details):
+-- 'SetCookie' does not export a constructor; instead, use 'defaultSetCookie' and override values (see <http://www.yesodweb.com/book/settings-types> for details):
 --
 -- @
 -- import Web.Cookie
 -- :set -XOverloadedStrings
--- let cookie = 'def' { 'setCookieName' = "cookieName", 'setCookieValue' = "cookieValue" }
+-- let cookie = 'defaultSetCookie' { 'setCookieName' = "cookieName", 'setCookieValue' = "cookieValue" }
 -- @
 --
 -- ==== Cookie Configuration
@@ -158,18 +159,25 @@ instance NFData SetCookie where
         rnfMBS Nothing = ()
         rnfMBS (Just bs) = bs `seq` ()
 
+-- | @'def' = 'defaultSetCookie'@
 instance Default SetCookie where
-    def = SetCookie
-        { setCookieName     = "name"
-        , setCookieValue    = "value"
-        , setCookiePath     = Nothing
-        , setCookieExpires  = Nothing
-        , setCookieMaxAge   = Nothing
-        , setCookieDomain   = Nothing
-        , setCookieHttpOnly = False
-        , setCookieSecure   = False
-        , setCookieSameSite = Nothing
-        }
+    def = defaultSetCookie
+
+-- | A minimal 'SetCookie'. All fields are 'Nothing' or 'False' except @'setCookieName' = "name"@ and @'setCookieValue' = "value"@. You need this to construct a 'SetCookie', because it does not export a constructor. Equivalently, you may use 'def'.
+--
+-- @since 0.4.2.2
+defaultSetCookie :: SetCookie
+defaultSetCookie = SetCookie
+    { setCookieName     = "name"
+    , setCookieValue    = "value"
+    , setCookiePath     = Nothing
+    , setCookieExpires  = Nothing
+    , setCookieMaxAge   = Nothing
+    , setCookieDomain   = Nothing
+    , setCookieHttpOnly = False
+    , setCookieSecure   = False
+    , setCookieSameSite = Nothing
+    }
 
 renderSetCookie :: SetCookie -> Builder
 renderSetCookie sc = mconcat

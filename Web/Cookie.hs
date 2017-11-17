@@ -131,15 +131,19 @@ data SetCookie = SetCookie
     }
     deriving (Eq, Show)
 
--- | Data type representing the options for a SameSite cookie
-data SameSiteOption = Lax | Strict deriving (Show, Eq)
+-- | Data type representing the options for a <https://tools.ietf.org/html/draft-west-first-party-cookies-07#section-4.1 SameSite cookie>
+data SameSiteOption = Lax
+                    | Strict
+                    deriving (Show, Eq)
 
 instance NFData SameSiteOption where
   rnf x = x `seq` ()
 
+-- | Directs the browser to send the cookie for <https://tools.ietf.org/html/rfc7231#section-4.2.1 safe requests> (e.g. @GET@), but not for unsafe ones (e.g. @POST@)
 sameSiteLax :: SameSiteOption
 sameSiteLax = Lax
 
+-- | Directs the browser to not send the cookie for /any/ cross-site request, including e.g. a user clicking a link in their email to open a page on your site.
 sameSiteStrict :: SameSiteOption
 sameSiteStrict = Strict
 

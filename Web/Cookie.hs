@@ -37,24 +37,23 @@ module Web.Cookie
 
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
-import Data.Char (toLower)
+import Data.Char (toLower, isDigit)
 import Blaze.ByteString.Builder (Builder, fromByteString, copyByteString)
 import Blaze.ByteString.Builder.Char8 (fromChar)
 import Data.Monoid (mempty, mappend, mconcat)
 import Data.Word (Word8)
 import Data.Ratio (numerator, denominator)
-import Data.Time (UTCTime (UTCTime), toGregorian, fromGregorian, formatTime, parseTime)
+import Data.Time (UTCTime (UTCTime), toGregorian, fromGregorian, formatTime, parseTimeM)
 import Data.Time.Clock (DiffTime, secondsToDiffTime)
 #if MIN_VERSION_time(1, 5, 0)
 import Data.Time (defaultTimeLocale)
 #else
 import System.Locale (defaultTimeLocale)
 #endif
-import Control.Arrow (first)
+import Control.Arrow (first, (***))
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8, decodeUtf8With)
 import Data.Text.Encoding.Error (lenientDecode)
-import Control.Arrow ((***))
 import Data.Maybe (isJust)
 import Data.Default.Class (Default (def))
 import Control.DeepSeq (NFData (rnf))
@@ -90,7 +89,7 @@ parseCookie s =
 
 breakDiscard :: Word8 -> S.ByteString -> (S.ByteString, S.ByteString)
 breakDiscard w s =
-    let (x, y) = S.breakByte w s
+    let (x, y) = S.break (== w) s
      in (x, S.drop 1 y)
 
 renderCookies :: Cookies -> Builder
@@ -246,7 +245,7 @@ formatCookieExpires =
 
 parseCookieExpires :: S.ByteString -> Maybe UTCTime
 parseCookieExpires =
-    fmap fuzzYear . parseTime defaultTimeLocale expiresFormat . S8.unpack
+    fmap fuzzYear . parseTimeM True defaultTimeLocale expiresFormat . S8.unpack
   where
     -- See: https://github.com/snoyberg/cookie/issues/5
     fuzzYear orig@(UTCTime day diff)
@@ -266,6 +265,6 @@ formatCookieMaxAge difftime = S8.pack $ show (num `div` denom)
 
 parseCookieMaxAge :: S.ByteString -> Maybe DiffTime
 parseCookieMaxAge bs
-  | all (\ c -> c >= '0' && c <= '9') $ unpacked = Just $ secondsToDiffTime $ read unpacked
+  | all isDigit unpacked = Just $ secondsToDiffTime $ read unpacked
   | otherwise = Nothing
   where unpacked = S8.unpack bs

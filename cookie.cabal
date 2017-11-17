@@ -18,7 +18,7 @@ library
                    , bytestring                >= 0.9.1.4
                    , blaze-builder             >= 0.2.1
                    , old-locale                >= 1
-                   , time                      >= 1.4
+                   , time                      >= 1.5
                    , text                      >= 0.7
                    , data-default-class
                    , deepseq
@@ -39,9 +39,7 @@ test-suite test
                  , tasty-hunit
                  , tasty-quickcheck
                  , text
-                 -- Bug in time 1.4.0, see:
-                 -- https://github.com/snoyberg/cookie/issues/9
-                 , time >= 1.4.0.2
+                 , time >= 1.5
 
 source-repository head
   type:     git

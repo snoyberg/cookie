@@ -1,7 +1,7 @@
 ## 0.4.4
 
-* Dropped support for GHC<=7.8.x
 * Dropped dependency on blaze-builder
+* Made cookie text rendering slightly more efficient
 
 ## 0.4.3
 

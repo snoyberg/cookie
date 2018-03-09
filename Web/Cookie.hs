@@ -46,7 +46,7 @@ import Data.Time (UTCTime (UTCTime), toGregorian, fromGregorian, formatTime, par
 import Data.Time.Clock (DiffTime, secondsToDiffTime)
 import Control.Arrow (first, (***))
 import Data.Text (Text)
-import Data.Text.Encoding (encodeUtf8, decodeUtf8With)
+import Data.Text.Encoding (encodeUtf8Builder, decodeUtf8With)
 import Data.Text.Encoding.Error (lenientDecode)
 import Data.Maybe (isJust)
 import Data.Default.Class (Default (def))
@@ -61,9 +61,8 @@ parseCookiesText =
   where
     go = decodeUtf8With lenientDecode
 
--- FIXME to speed things up, skip encodeUtf8 and use fromText instead
 renderCookiesText :: CookiesText -> Builder
-renderCookiesText = renderCookies . map (encodeUtf8 *** encodeUtf8)
+renderCookiesText = renderCookies . map (encodeUtf8Builder *** encodeUtf8Builder)
 
 type Cookies = [(S.ByteString, S.ByteString)]
 
@@ -86,16 +85,18 @@ breakDiscard w s =
     let (x, y) = S.break (== w) s
      in (x, S.drop 1 y)
 
-renderCookies :: Cookies -> Builder
+type CookieBuilder = (Builder, Builder)
+
+renderCookies :: [CookieBuilder] -> Builder
 renderCookies [] = mempty
 renderCookies cs =
     foldr1 go $ map renderCookie cs
   where
     go x y = x `mappend` char8 ';' `mappend` y
 
-renderCookie :: (S.ByteString, S.ByteString) -> Builder
-renderCookie (k, v) = byteString k `mappend` char8 '='
-                                       `mappend` byteString v
+renderCookie :: CookieBuilder -> Builder
+renderCookie (k, v) = k `mappend` char8 '=' `mappend` v
+
 -- | Data type representing the key-value pair to use for a cookie, as well as configuration options for it.
 --
 -- ==== Creating a SetCookie

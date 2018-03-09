@@ -62,7 +62,7 @@ parseCookiesText =
     go = decodeUtf8With lenientDecode
 
 renderCookiesText :: CookiesText -> Builder
-renderCookiesText = renderCookies . map (encodeUtf8Builder *** encodeUtf8Builder)
+renderCookiesText = renderCookiesBuilder . map (encodeUtf8Builder *** encodeUtf8Builder)
 
 type Cookies = [(S.ByteString, S.ByteString)]
 
@@ -87,15 +87,18 @@ breakDiscard w s =
 
 type CookieBuilder = (Builder, Builder)
 
-renderCookies :: [CookieBuilder] -> Builder
-renderCookies [] = mempty
-renderCookies cs =
+renderCookiesBuilder :: [CookieBuilder] -> Builder
+renderCookiesBuilder [] = mempty
+renderCookiesBuilder cs =
     foldr1 go $ map renderCookie cs
   where
     go x y = x `mappend` char8 ';' `mappend` y
 
 renderCookie :: CookieBuilder -> Builder
 renderCookie (k, v) = k `mappend` char8 '=' `mappend` v
+
+renderCookies :: Cookies -> Builder
+renderCookies = renderCookiesBuilder . map (byteString *** byteString)
 
 -- | Data type representing the key-value pair to use for a cookie, as well as configuration options for it.
 --

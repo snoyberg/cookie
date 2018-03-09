@@ -29,12 +29,9 @@ main = defaultMain $ testGroup "cookie"
 
 propParseRenderCookies :: Cookies' -> Bool
 propParseRenderCookies cs' =
-    parseCookies (builderToBs $ renderCookies cs) == csBS
+    parseCookies (builderToBs $ renderCookies cs) == cs
   where
-    char'sToBuilder :: [Char'] -> Builder
-    char'sToBuilder = mconcat . map (word8 . unChar') 
-    csBS = map (fromUnChars *** fromUnChars) cs'
-    cs = map (char'sToBuilder *** char'sToBuilder) cs'
+    cs = map (fromUnChars *** fromUnChars) cs'
 
 propParseRenderCookiesText :: Cookies' -> Bool
 propParseRenderCookiesText cs' =

@@ -5,7 +5,7 @@ import Test.QuickCheck
 import Test.HUnit ((@=?), Assertion)
 
 import Web.Cookie
-import Blaze.ByteString.Builder (Builder, toLazyByteString)
+import Data.ByteString.Builder (Builder, word8, toLazyByteString)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Lazy as L
@@ -28,9 +28,12 @@ main = defaultMain $ testGroup "cookie"
 
 propParseRenderCookies :: Cookies' -> Bool
 propParseRenderCookies cs' =
-    parseCookies (builderToBs $ renderCookies cs) == cs
+    parseCookies (builderToBs $ renderCookies cs) == csBS
   where
-    cs = map (fromUnChars *** fromUnChars) cs'
+    char'sToBuilder :: [Char'] -> Builder
+    char'sToBuilder = mconcat . map (word8 . unChar') 
+    csBS = map (fromUnChars *** fromUnChars) cs'
+    cs = map (char'sToBuilder *** char'sToBuilder) cs'
 
 propParseRenderCookiesText :: Cookies' -> Bool
 propParseRenderCookiesText cs' =

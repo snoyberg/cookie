@@ -30,13 +30,12 @@ test-suite test
     build-depends: base
                  , HUnit
                  , QuickCheck
-                 , blaze-builder
-                 , bytestring
+                 , bytestring >= 0.10.2
                  , cookie
                  , tasty
                  , tasty-hunit
                  , tasty-quickcheck
-                 , text
+                 , text >= 1.1
                  , time >= 1.5
 
 source-repository head

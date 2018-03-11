@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Web.Cookie
     ( -- * Server to client
@@ -38,21 +37,16 @@ module Web.Cookie
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
 import Data.Char (toLower, isDigit)
-import Blaze.ByteString.Builder (Builder, fromByteString, copyByteString)
-import Blaze.ByteString.Builder.Char8 (fromChar)
+import Data.ByteString.Builder (Builder, byteString, char8)
+import Data.ByteString.Builder.Extra (byteStringCopy)
 import Data.Monoid (mempty, mappend, mconcat)
 import Data.Word (Word8)
 import Data.Ratio (numerator, denominator)
-import Data.Time (UTCTime (UTCTime), toGregorian, fromGregorian, formatTime, parseTimeM)
+import Data.Time (UTCTime (UTCTime), toGregorian, fromGregorian, formatTime, parseTimeM, defaultTimeLocale)
 import Data.Time.Clock (DiffTime, secondsToDiffTime)
-#if MIN_VERSION_time(1, 5, 0)
-import Data.Time (defaultTimeLocale)
-#else
-import System.Locale (defaultTimeLocale)
-#endif
 import Control.Arrow (first, (***))
 import Data.Text (Text)
-import Data.Text.Encoding (encodeUtf8, decodeUtf8With)
+import Data.Text.Encoding (encodeUtf8Builder, decodeUtf8With)
 import Data.Text.Encoding.Error (lenientDecode)
 import Data.Maybe (isJust)
 import Data.Default.Class (Default (def))
@@ -67,9 +61,8 @@ parseCookiesText =
   where
     go = decodeUtf8With lenientDecode
 
--- FIXME to speed things up, skip encodeUtf8 and use fromText instead
 renderCookiesText :: CookiesText -> Builder
-renderCookiesText = renderCookies . map (encodeUtf8 *** encodeUtf8)
+renderCookiesText = renderCookiesBuilder . map (encodeUtf8Builder *** encodeUtf8Builder)
 
 type Cookies = [(S.ByteString, S.ByteString)]
 
@@ -92,16 +85,21 @@ breakDiscard w s =
     let (x, y) = S.break (== w) s
      in (x, S.drop 1 y)
 
-renderCookies :: Cookies -> Builder
-renderCookies [] = mempty
-renderCookies cs =
+type CookieBuilder = (Builder, Builder)
+
+renderCookiesBuilder :: [CookieBuilder] -> Builder
+renderCookiesBuilder [] = mempty
+renderCookiesBuilder cs =
     foldr1 go $ map renderCookie cs
   where
-    go x y = x `mappend` fromChar ';' `mappend` y
+    go x y = x `mappend` char8 ';' `mappend` y
 
-renderCookie :: (S.ByteString, S.ByteString) -> Builder
-renderCookie (k, v) = fromByteString k `mappend` fromChar '='
-                                       `mappend` fromByteString v
+renderCookie :: CookieBuilder -> Builder
+renderCookie (k, v) = k `mappend` char8 '=' `mappend` v
+
+renderCookies :: Cookies -> Builder
+renderCookies = renderCookiesBuilder . map (byteString *** byteString)
+
 -- | Data type representing the key-value pair to use for a cookie, as well as configuration options for it.
 --
 -- ==== Creating a SetCookie
@@ -184,35 +182,35 @@ defaultSetCookie = SetCookie
 
 renderSetCookie :: SetCookie -> Builder
 renderSetCookie sc = mconcat
-    [ fromByteString (setCookieName sc)
-    , fromChar '='
-    , fromByteString (setCookieValue sc)
+    [ byteString (setCookieName sc)
+    , char8 '='
+    , byteString (setCookieValue sc)
     , case setCookiePath sc of
         Nothing -> mempty
-        Just path -> copyByteString "; Path="
-                     `mappend` fromByteString path
+        Just path -> byteStringCopy "; Path="
+                     `mappend` byteString path
     , case setCookieExpires sc of
         Nothing -> mempty
-        Just e -> copyByteString "; Expires=" `mappend`
-                  fromByteString (formatCookieExpires e)
+        Just e -> byteStringCopy "; Expires=" `mappend`
+                  byteString (formatCookieExpires e)
     , case setCookieMaxAge sc of
         Nothing -> mempty
-        Just ma -> copyByteString"; Max-Age=" `mappend`
-                   fromByteString (formatCookieMaxAge ma)
+        Just ma -> byteStringCopy"; Max-Age=" `mappend`
+                   byteString (formatCookieMaxAge ma)
     , case setCookieDomain sc of
         Nothing -> mempty
-        Just d -> copyByteString "; Domain=" `mappend`
-                  fromByteString d
+        Just d -> byteStringCopy "; Domain=" `mappend`
+                  byteString d
     , if setCookieHttpOnly sc
-        then copyByteString "; HttpOnly"
+        then byteStringCopy "; HttpOnly"
         else mempty
     , if setCookieSecure sc
-        then copyByteString "; Secure"
+        then byteStringCopy "; Secure"
         else mempty
     , case setCookieSameSite sc of
         Nothing -> mempty
-        Just Lax -> copyByteString "; SameSite=Lax"
-        Just Strict -> copyByteString "; SameSite=Strict"
+        Just Lax -> byteStringCopy "; SameSite=Lax"
+        Just Strict -> byteStringCopy "; SameSite=Strict"
     ]
 
 parseSetCookie :: S.ByteString -> SetCookie

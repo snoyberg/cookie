@@ -5,11 +5,12 @@ import Test.QuickCheck
 import Test.HUnit ((@=?), Assertion)
 
 import Web.Cookie
-import Blaze.ByteString.Builder (Builder, toLazyByteString)
+import Data.ByteString.Builder (Builder, word8, toLazyByteString)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Lazy as L
 import Data.Word (Word8)
+import Data.Monoid (mconcat)
 import Control.Arrow ((***))
 import Control.Applicative ((<$>), (<*>))
 import Data.Time (UTCTime (UTCTime), toGregorian)

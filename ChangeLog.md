@@ -1,3 +1,8 @@
+## 0.4.4
+
+* Dropped dependency on blaze-builder
+* Made cookie text rendering slightly more efficient
+
 ## 0.4.3
 
 * Added `defaultSetCookie` [#16](https://github.com/snoyberg/cookie/pull/16)

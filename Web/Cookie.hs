@@ -15,6 +15,7 @@ module Web.Cookie
     , SameSiteOption
     , sameSiteLax
     , sameSiteStrict
+    , sameSiteNone
       -- ** Functions
     , parseSetCookie
     , renderSetCookie
@@ -124,13 +125,14 @@ data SetCookie = SetCookie
     , setCookieDomain :: Maybe S.ByteString -- ^ The domain for which the cookie should be sent. Default value: @Nothing@ (The browser defaults to the current domain).
     , setCookieHttpOnly :: Bool -- ^ Marks the cookie as "HTTP only", i.e. not accessible from Javascript. Default value: @False@
     , setCookieSecure :: Bool -- ^ Instructs the browser to only send the cookie over HTTPS. Default value: @False@
-    , setCookieSameSite :: Maybe SameSiteOption -- ^ Marks the cookie as "same site", i.e. should not be sent with cross-site requests. Default value: @Nothing@
+    , setCookieSameSite :: Maybe SameSiteOption -- ^ The "same site" policy of the cookie, i.e. whether it should be sent with cross-site requests. Default value: @Nothing@
     }
     deriving (Eq, Show)
 
 -- | Data type representing the options for a <https://tools.ietf.org/html/draft-west-first-party-cookies-07#section-4.1 SameSite cookie>
 data SameSiteOption = Lax
                     | Strict
+                    | None
                     deriving (Show, Eq)
 
 instance NFData SameSiteOption where
@@ -143,6 +145,11 @@ sameSiteLax = Lax
 -- | Directs the browser to not send the cookie for /any/ cross-site request, including e.g. a user clicking a link in their email to open a page on your site.
 sameSiteStrict :: SameSiteOption
 sameSiteStrict = Strict
+
+-- |
+-- Directs the browser to send the cookie for cross-site requests.
+sameSiteNone :: SameSiteOption
+sameSiteNone = None
 
 instance NFData SetCookie where
     rnf (SetCookie a b c d e f g h i) =
@@ -211,6 +218,7 @@ renderSetCookie sc = mconcat
         Nothing -> mempty
         Just Lax -> byteStringCopy "; SameSite=Lax"
         Just Strict -> byteStringCopy "; SameSite=Strict"
+        Just None -> byteStringCopy "; SameSite=None"
     ]
 
 parseSetCookie :: S.ByteString -> SetCookie
@@ -228,6 +236,7 @@ parseSetCookie a = SetCookie
     , setCookieSameSite = case lookup "samesite" flags of
         Just "Lax" -> Just Lax
         Just "Strict" -> Just Strict
+        Just "None" -> Just None
         _ -> Nothing
     }
   where

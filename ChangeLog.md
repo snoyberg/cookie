@@ -1,3 +1,7 @@
+## 0.4.5
+
+* Added `SameSite=None`
+
 ## 0.4.4
 
 * Dropped dependency on blaze-builder

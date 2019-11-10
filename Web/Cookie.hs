@@ -148,6 +148,8 @@ sameSiteStrict = Strict
 
 -- |
 -- Directs the browser to send the cookie for cross-site requests.
+--
+-- @since 0.4.5
 sameSiteNone :: SameSiteOption
 sameSiteNone = None
 

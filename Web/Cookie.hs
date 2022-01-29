@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Web.Cookie
     ( -- * Server to client
@@ -40,7 +41,9 @@ import qualified Data.ByteString.Char8 as S8
 import Data.Char (toLower, isDigit)
 import Data.ByteString.Builder (Builder, byteString, char8)
 import Data.ByteString.Builder.Extra (byteStringCopy)
+#if !(MIN_VERSION_base(4,8,0))
 import Data.Monoid (mempty, mappend, mconcat)
+#endif
 import Data.Word (Word8)
 import Data.Ratio (numerator, denominator)
 import Data.Time (UTCTime (UTCTime), toGregorian, fromGregorian, formatTime, parseTimeM, defaultTimeLocale)

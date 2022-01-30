@@ -1,3 +1,7 @@
+## Unreleased
+
+* Resolve redundant import of Data.Monoid [#26](https://github.com/snoyberg/cookie/pull/26)
+
 ## 0.4.5
 
 * Added `SameSite=None`

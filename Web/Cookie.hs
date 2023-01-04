@@ -107,6 +107,7 @@ renderCookie (k, v) = k `mappend` char8 '=' `mappend` v
 renderCookies :: Cookies -> Builder
 renderCookies = renderCookiesBuilder . map (byteString *** byteString)
 
+-- | @since 0.4.6
 renderCookiesBS :: Cookies -> S.ByteString
 renderCookiesBS = L.toStrict . toLazyByteString . renderCookies
 
@@ -232,6 +233,7 @@ renderSetCookie sc = mconcat
         Just None -> byteStringCopy "; SameSite=None"
     ]
 
+-- | @since 0.4.6
 renderSetCookieBS :: SetCookie -> S.ByteString
 renderSetCookieBS = L.toStrict . toLazyByteString . renderSetCookie
 

@@ -20,12 +20,14 @@ module Web.Cookie
       -- ** Functions
     , parseSetCookie
     , renderSetCookie
+    , renderSetCookieBS
     , defaultSetCookie
     , def
       -- * Client to server
     , Cookies
     , parseCookies
     , renderCookies
+    , renderCookiesBS
       -- ** UTF8 Version
     , CookiesText
     , parseCookiesText
@@ -38,8 +40,9 @@ module Web.Cookie
 
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
+import qualified Data.ByteString.Lazy as L
 import Data.Char (toLower, isDigit)
-import Data.ByteString.Builder (Builder, byteString, char8)
+import Data.ByteString.Builder (Builder, byteString, char8, toLazyByteString)
 import Data.ByteString.Builder.Extra (byteStringCopy)
 #if !(MIN_VERSION_base(4,8,0))
 import Data.Monoid (mempty, mappend, mconcat)
@@ -103,6 +106,10 @@ renderCookie (k, v) = k `mappend` char8 '=' `mappend` v
 
 renderCookies :: Cookies -> Builder
 renderCookies = renderCookiesBuilder . map (byteString *** byteString)
+
+-- | @since 0.4.6
+renderCookiesBS :: Cookies -> S.ByteString
+renderCookiesBS = L.toStrict . toLazyByteString . renderCookies
 
 -- | Data type representing the key-value pair to use for a cookie, as well as configuration options for it.
 --
@@ -225,6 +232,10 @@ renderSetCookie sc = mconcat
         Just Strict -> byteStringCopy "; SameSite=Strict"
         Just None -> byteStringCopy "; SameSite=None"
     ]
+
+-- | @since 0.4.6
+renderSetCookieBS :: SetCookie -> S.ByteString
+renderSetCookieBS = L.toStrict . toLazyByteString . renderSetCookie
 
 parseSetCookie :: S.ByteString -> SetCookie
 parseSetCookie a = SetCookie

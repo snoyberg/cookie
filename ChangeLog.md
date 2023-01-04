@@ -1,6 +1,7 @@
-## Unreleased
+## 0.4.6
 
 * Resolve redundant import of Data.Monoid [#26](https://github.com/snoyberg/cookie/pull/26)
+* Added `renderSetCookieBS` and `renderCookiesBS`
 
 ## 0.4.5
 

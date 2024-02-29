@@ -22,6 +22,8 @@ main = defaultMain $ testGroup "cookie"
     , testProperty "parse/render SetCookie" propParseRenderSetCookie
     , testProperty "parse/render cookies text" propParseRenderCookiesText
     , testCase "parseCookies" caseParseCookies
+    , testCase "parseQuotedCookies" caseParseQuotedCookies
+    , testCase "parseQuotedSetCookie" caseParseQuotedSetCookie
     , twoDigit 24 2024
     , twoDigit 69 2069
     , twoDigit 70 1970
@@ -106,3 +108,17 @@ twoDigit x y =
         , show x
         , " 04:52:08 GMT"
         ]
+
+caseParseQuotedCookies :: Assertion
+caseParseQuotedCookies = do
+    let input = S8.pack "a=\"a1\";b=\"b2\"; c=\"c3\""
+        expected = [("a", "a1"), ("b", "b2"), ("c", "c3")]
+    map (S8.pack *** S8.pack) expected @=? parseCookies input
+
+caseParseQuotedSetCookie :: Assertion
+caseParseQuotedSetCookie = do
+    let input = S8.pack "a=\"a1\""
+        result = parseSetCookie input
+        resultNameAndValue = (setCookieName result, setCookieValue result)
+        expected = (S8.pack "a", S8.pack "a1")
+    expected @=? resultNameAndValue

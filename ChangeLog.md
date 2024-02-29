@@ -1,3 +1,11 @@
+## 0.5.0
+
+* Remove surrounding double quotes from cookie values when parsing [#31](https://github.com/snoyberg/cookie/pull/31)
+
+  This is a breaking change, as it changes the behavior of `parseCookies` and `parseSetCookie` to no
+  longer include the surrounding double quotes in the cookie value. This is the correct behavior
+  according to the RFC.
+
 ## 0.4.6
 
 * Resolve redundant import of Data.Monoid [#26](https://github.com/snoyberg/cookie/pull/26)

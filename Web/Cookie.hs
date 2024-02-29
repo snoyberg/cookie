@@ -85,12 +85,21 @@ parseCookie :: S.ByteString -> (S.ByteString, S.ByteString)
 parseCookie s =
     let (key, value) = breakDiscard 61 s -- equals sign
         key' = S.dropWhile (== 32) key -- space
-     in (key', value)
+        value' = dropEnds 34 value -- double quote
+     in (key', value')
 
 breakDiscard :: Word8 -> S.ByteString -> (S.ByteString, S.ByteString)
 breakDiscard w s =
     let (x, y) = S.break (== w) s
      in (x, S.drop 1 y)
+
+dropEnds :: Word8 -> S.ByteString -> S.ByteString
+dropEnds w s =
+    case S.unsnoc s of
+        Just (s', w') | w' == w -> case S.uncons s' of
+            Just (w'', s'') | w'' == w -> s''
+            _ -> s
+        _ -> s
 
 type CookieBuilder = (Builder, Builder)
 
@@ -240,7 +249,7 @@ renderSetCookieBS = L.toStrict . toLazyByteString . renderSetCookie
 parseSetCookie :: S.ByteString -> SetCookie
 parseSetCookie a = SetCookie
     { setCookieName = name
-    , setCookieValue = value
+    , setCookieValue = dropEnds 34 value -- double quote
     , setCookiePath = lookup "path" flags
     , setCookieExpires =
         lookup "expires" flags >>= parseCookieExpires

@@ -146,7 +146,7 @@ data SetCookie = SetCookie
     , setCookieHttpOnly :: Bool -- ^ Marks the cookie as "HTTP only", i.e. not accessible from Javascript. Default value: @False@
     , setCookieSecure :: Bool -- ^ Instructs the browser to only send the cookie over HTTPS. Default value: @False@
     , setCookieSameSite :: Maybe SameSiteOption -- ^ The "same site" policy of the cookie, i.e. whether it should be sent with cross-site requests. Default value: @Nothing@
-    , setCookiePartitioned :: Bool
+    , setCookiePartitioned :: Bool -- ^ Cookies marked Partitioned are double-keyed: by the origin that sets them and the origin of the top-level page. Default value: @False@
     }
     deriving (Eq, Show)
 

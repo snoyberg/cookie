@@ -13,6 +13,7 @@ module Web.Cookie
     , setCookieHttpOnly
     , setCookieSecure
     , setCookieSameSite
+    , setCookiePartitioned
     , SameSiteOption
     , sameSiteLax
     , sameSiteStrict
@@ -145,6 +146,7 @@ data SetCookie = SetCookie
     , setCookieHttpOnly :: Bool -- ^ Marks the cookie as "HTTP only", i.e. not accessible from Javascript. Default value: @False@
     , setCookieSecure :: Bool -- ^ Instructs the browser to only send the cookie over HTTPS. Default value: @False@
     , setCookieSameSite :: Maybe SameSiteOption -- ^ The "same site" policy of the cookie, i.e. whether it should be sent with cross-site requests. Default value: @Nothing@
+    , setCookiePartitioned :: Bool
     }
     deriving (Eq, Show)
 
@@ -173,7 +175,7 @@ sameSiteNone :: SameSiteOption
 sameSiteNone = None
 
 instance NFData SetCookie where
-    rnf (SetCookie a b c d e f g h i) =
+    rnf (SetCookie a b c d e f g h i j) =
         a `seq`
         b `seq`
         rnfMBS c `seq`
@@ -182,7 +184,8 @@ instance NFData SetCookie where
         rnfMBS f `seq`
         rnf g `seq`
         rnf h `seq`
-        rnf i
+        rnf i `seq`
+        rnf j
       where
         -- For backwards compatibility
         rnfMBS Nothing = ()
@@ -206,6 +209,7 @@ defaultSetCookie = SetCookie
     , setCookieHttpOnly = False
     , setCookieSecure   = False
     , setCookieSameSite = Nothing
+    , setCookiePartitioned = False
     }
 
 renderSetCookie :: SetCookie -> Builder
@@ -240,6 +244,9 @@ renderSetCookie sc = mconcat
         Just Lax -> byteStringCopy "; SameSite=Lax"
         Just Strict -> byteStringCopy "; SameSite=Strict"
         Just None -> byteStringCopy "; SameSite=None"
+    , if setCookiePartitioned sc
+        then byteStringCopy "; Partitioned"
+        else mempty
     ]
 
 -- | @since 0.4.6
@@ -263,6 +270,7 @@ parseSetCookie a = SetCookie
         Just "Strict" -> Just Strict
         Just "None" -> Just None
         _ -> Nothing
+    , setCookiePartitioned = isJust $ lookup "partitioned" flags
     }
   where
     pairs = map (parsePair . dropSpace) $ S.split 59 a ++ [S8.empty] -- 59 = semicolon

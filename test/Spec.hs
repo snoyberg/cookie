@@ -74,6 +74,7 @@ instance Arbitrary SetCookie where
         httponly <- arbitrary
         secure <- arbitrary
         sameSite <- fmap (fmap unSameSiteOption') arbitrary
+        partitioned <- arbitrary
         return def
             { setCookieName = name
             , setCookieValue = value
@@ -83,6 +84,7 @@ instance Arbitrary SetCookie where
             , setCookieHttpOnly = httponly
             , setCookieSecure = secure
             , setCookieSameSite = sameSite
+            , setCookiePartitioned = partitioned
             }
 
 caseParseCookies :: Assertion

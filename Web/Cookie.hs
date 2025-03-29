@@ -58,6 +58,7 @@ import Data.Text.Encoding.Error (lenientDecode)
 import Data.Maybe (isJust)
 import Data.Default.Class (Default (def))
 import Control.DeepSeq (NFData (rnf))
+import qualified Data.List.NonEmpty as NE
 
 -- | Textual cookies. Functions assume UTF8 encoding.
 type CookiesText = [(Text, Text)]
@@ -73,19 +74,31 @@ renderCookiesText = renderCookiesBuilder . map (encodeUtf8Builder *** encodeUtf8
 
 type Cookies = [(S.ByteString, S.ByteString)]
 
+semicolon :: Word8
+semicolon = 59
+
+equalsSign :: Word8
+equalsSign = 61
+
+space :: Word8
+space = 32
+
+doubleQuote :: Word8
+doubleQuote = 34
+
 -- | Decode the value of a \"Cookie\" request header into key/value pairs.
 parseCookies :: S.ByteString -> Cookies
 parseCookies s
   | S.null s = []
   | otherwise =
-    let (x, y) = breakDiscard 59 s -- semicolon
+    let (x, y) = breakDiscard semicolon s
      in parseCookie x : parseCookies y
 
 parseCookie :: S.ByteString -> (S.ByteString, S.ByteString)
 parseCookie s =
-    let (key, value) = breakDiscard 61 s -- equals sign
-        key' = S.dropWhile (== 32) key -- space
-        value' = dropEnds 34 value -- double quote
+    let (key, value) = breakDiscard equalsSign s
+        key' = S.dropWhile (== space) key
+        value' = dropEnds doubleQuote value
      in (key', value')
 
 breakDiscard :: Word8 -> S.ByteString -> (S.ByteString, S.ByteString)
@@ -223,7 +236,7 @@ renderSetCookie sc = mconcat
                   byteString (formatCookieExpires e)
     , case setCookieMaxAge sc of
         Nothing -> mempty
-        Just ma -> byteStringCopy"; Max-Age=" `mappend`
+        Just ma -> byteStringCopy "; Max-Age=" `mappend`
                    byteString (formatCookieMaxAge ma)
     , case setCookieDomain sc of
         Nothing -> mempty
@@ -249,7 +262,7 @@ renderSetCookieBS = L.toStrict . toLazyByteString . renderSetCookie
 parseSetCookie :: S.ByteString -> SetCookie
 parseSetCookie a = SetCookie
     { setCookieName = name
-    , setCookieValue = dropEnds 34 value -- double quote
+    , setCookieValue = dropEnds doubleQuote value
     , setCookiePath = lookup "path" flags
     , setCookieExpires =
         lookup "expires" flags >>= parseCookieExpires
@@ -265,11 +278,12 @@ parseSetCookie a = SetCookie
         _ -> Nothing
     }
   where
-    pairs = map (parsePair . dropSpace) $ S.split 59 a ++ [S8.empty] -- 59 = semicolon
-    (name, value) = head pairs
-    flags = map (first (S8.map toLower)) $ tail pairs
-    parsePair = breakDiscard 61 -- equals sign
-    dropSpace = S.dropWhile (== 32) -- space
+    attributes = NE.prependList (S.split semicolon a) $ NE.singleton S8.empty
+    pairs = NE.map (parsePair . dropSpace) attributes
+    (name, value) = NE.head pairs
+    flags = map (first (S8.map toLower)) $ NE.tail pairs
+    parsePair = breakDiscard equalsSign
+    dropSpace = S.dropWhile (== space)
 
 expiresFormat :: String
 expiresFormat = "%a, %d-%b-%Y %X GMT"

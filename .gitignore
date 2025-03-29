@@ -1,11 +1,10 @@
-# Created by https://www.gitignore.io/api/haskell
-
-### Haskell ###
+# https://github.com/github/gitignore/blob/86d1826a9f3daf4744e7229a26187f81c081744c/Haskell.gitignore
 dist
 dist-*
 cabal-dev
 *.o
 *.hi
+*.hie
 *.chi
 *.chs.h
 *.dyn_o
@@ -20,6 +19,6 @@ cabal.sandbox.config
 *.eventlog
 .stack-work/
 cabal.project.local
+cabal.project.local~
 .HTF/
-
-# End of https://www.gitignore.io/api/haskell
+.ghc.environment.*

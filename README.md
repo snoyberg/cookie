@@ -1,5 +1,5 @@
 ## cookie
 
-[![Build Status](https://travis-ci.org/snoyberg/cookie.svg?branch=master)](https://travis-ci.org/snoyberg/cookie)
+[![Build Status](https://github.com/snoyberg/cookie/actions/workflows/tests.yaml/badge.svg)](https://github.com/snoyberg/cookie/actions)
 
 HTTP cookie parsing and rendering

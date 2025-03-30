@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 module Main where
 
@@ -91,6 +92,10 @@ caseParseCookies = do
     let input = S8.pack "a=a1;b=b2; c=c3"
         expected = [("a", "a1"), ("b", "b2"), ("c", "c3")]
     map (S8.pack *** S8.pack) expected @=? parseCookies input
+
+#if !(MIN_VERSION_time(1,11,0))
+type Year = Integer
+#endif
 
 -- Tests for two digit years, see:
 --

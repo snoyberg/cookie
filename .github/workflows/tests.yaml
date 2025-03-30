@@ -1,0 +1,59 @@
+name: Tests
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  schedule:
+    - cron: 0 0 * * *
+
+jobs:
+  stack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: stack dot --global-hints --resolver nightly --lock-file read-write
+      - uses: actions/cache@v4
+        with:
+          path: ~/.stack
+          key: ${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}
+      - run: stack test --resolver nightly --haddock --no-haddock-deps
+
+  build:
+    name: ${{ matrix.os }} / GHC ${{ matrix.ghc }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+        ghc:
+          - "8.10"
+          - "9.0"
+          - "9.2"
+          - "9.4"
+          - "9.6"
+          - "9.8"
+          - "9.10"
+          - "9.12"
+        include:
+          - os: macos-latest
+            ghc: system
+          - os: windows-latest
+            ghc: system
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hspec/setup-haskell@v1
+        with:
+          ghc-version: ${{ matrix.ghc }}
+      - uses: sol/run-haskell-tests@v2
+        with:
+          caching: true

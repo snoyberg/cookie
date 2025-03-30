@@ -1,19 +1,20 @@
-import Test.Tasty (defaultMain, testGroup)
+{-# OPTIONS_GHC -Wno-orphans #-}
+module Main where
+
+import Test.Tasty (defaultMain, testGroup, TestTree)
 import Test.Tasty.QuickCheck (testProperty)
 import Test.Tasty.HUnit (testCase)
 import Test.QuickCheck
 import Test.HUnit ((@=?), Assertion)
 
 import Web.Cookie
-import Data.ByteString.Builder (Builder, word8, toLazyByteString)
+import Data.ByteString.Builder (Builder, toLazyByteString)
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Lazy as L
 import Data.Word (Word8)
-import Data.Monoid (mconcat)
 import Control.Arrow ((***))
-import Control.Applicative ((<$>), (<*>))
-import Data.Time (UTCTime (UTCTime), toGregorian)
+import Data.Time (UTCTime (UTCTime), toGregorian, Year)
 import qualified Data.Text as T
 
 main :: IO ()
@@ -94,13 +95,14 @@ caseParseCookies = do
 -- Tests for two digit years, see:
 --
 -- https://github.com/snoyberg/cookie/issues/5
+twoDigit :: Year -> Year -> TestTree
 twoDigit x y =
     testCase ("year " ++ show x) (y @=? year)
   where
     (year, _, _) = toGregorian day
     day =
         case setCookieExpires sc of
-            Just (UTCTime day _) -> day
+            Just (UTCTime day' _) -> day'
             Nothing -> error $ "setCookieExpires == Nothing for: " ++ show str
     sc = parseSetCookie str
     str = S8.pack $ concat

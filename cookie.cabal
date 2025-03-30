@@ -1,3 +1,4 @@
+cabal-version:   >= 1.10
 name:            cookie
 version:         0.5.0
 license:         MIT
@@ -8,9 +9,8 @@ synopsis:        HTTP cookie parsing and rendering
 description:     Hackage documentation generation is not reliable. For up to date documentation, please see: <https://www.stackage.org/package/cookie>.
 category:        Web, Yesod
 stability:       Stable
-cabal-version:   >= 1.10
 build-type:      Simple
-homepage:        http://github.com/snoyberg/cookie
+homepage:        https://github.com/snoyberg/cookie
 extra-source-files: README.md ChangeLog.md
 
 library
@@ -42,4 +42,4 @@ test-suite test
 
 source-repository head
   type:     git
-  location: git://github.com/snoyberg/cookie.git
+  location: https://github.com/snoyberg/cookie.git

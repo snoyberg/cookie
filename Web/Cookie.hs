@@ -55,10 +55,9 @@ import Control.Arrow (first, (***))
 import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8Builder, decodeUtf8With)
 import Data.Text.Encoding.Error (lenientDecode)
-import Data.Maybe (isJust)
+import Data.Maybe (isJust, fromMaybe, listToMaybe)
 import Data.Default.Class (Default (def))
 import Control.DeepSeq (NFData (rnf))
-import qualified Data.List.NonEmpty as NE
 
 -- | Textual cookies. Functions assume UTF8 encoding.
 type CookiesText = [(Text, Text)]
@@ -278,10 +277,9 @@ parseSetCookie a = SetCookie
         _ -> Nothing
     }
   where
-    attributes = NE.prependList (S.split semicolon a) $ NE.singleton S8.empty
-    pairs = NE.map (parsePair . dropSpace) attributes
-    (name, value) = NE.head pairs
-    flags = map (first (S8.map toLower)) $ NE.tail pairs
+    pairs = map (parsePair . dropSpace) $ S.split semicolon a
+    (name, value) = fromMaybe mempty $ listToMaybe pairs
+    flags = map (first (S8.map toLower)) $ drop 1 pairs
     parsePair = breakDiscard equalsSign
     dropSpace = S.dropWhile (== space)
 

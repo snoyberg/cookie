@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 module Main where
 
@@ -15,7 +14,7 @@ import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Lazy as L
 import Data.Word (Word8)
 import Control.Arrow ((***))
-import Data.Time (UTCTime (UTCTime), toGregorian, Year)
+import Data.Time (UTCTime (UTCTime), toGregorian)
 import qualified Data.Text as T
 
 main :: IO ()
@@ -56,7 +55,7 @@ instance Show Char' where
     show (Char' w) = [toEnum $ fromEnum w]
     showList = (++) . show . concatMap show
 instance Arbitrary Char' where
-    arbitrary = fmap (Char' . toEnum) $ choose (62, 125)
+    arbitrary = Char' . toEnum <$> choose (62, 125)
 newtype SameSiteOption' = SameSiteOption' { unSameSiteOption' :: SameSiteOption }
 instance Arbitrary SameSiteOption' where
   arbitrary = fmap SameSiteOption' (elements [sameSiteLax, sameSiteStrict, sameSiteNone])
@@ -93,9 +92,8 @@ caseParseCookies = do
         expected = [("a", "a1"), ("b", "b2"), ("c", "c3")]
     map (S8.pack *** S8.pack) expected @=? parseCookies input
 
-#if !(MIN_VERSION_time(1,11,0))
+-- TODO: Use `Year` from Data.Time when we'll remove support for GHC <9.2
 type Year = Integer
-#endif
 
 -- Tests for two digit years, see:
 --

@@ -1,3 +1,7 @@
+## 0.5.1
+
+* Add the `Partitioned` cookie attribute.
+
 ## 0.5.0
 
 * Remove surrounding double quotes from cookie values when parsing [#31](https://github.com/snoyberg/cookie/pull/31)
